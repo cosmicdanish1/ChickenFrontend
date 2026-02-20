@@ -22,10 +22,24 @@ import {
 import { TrendingUp, TrendingDown, DollarSign, PieChart as PieChartIcon, BarChart3, Download, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
 import { toast } from "sonner"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B9D']
 
 export default function ReportsPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Reports Coming Soon" 
+          description="Detailed reports and analytics for all operations will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [financialSummary, setFinancialSummary] = useState<any>(null)

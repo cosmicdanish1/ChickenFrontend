@@ -66,6 +66,7 @@ export interface Retailer {
   email?: string;
   address?: string;
   notes?: string;
+  status?: 'active' | 'inactive';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -247,6 +248,28 @@ async function apiRequest<T>(
       }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Handle empty responses (like DELETE operations)
+    const contentType = response.headers.get('content-type');
+    const contentLength = response.headers.get('content-length');
+    
+    // If no content or content-length is 0, return empty object
+    if (contentLength === '0' || response.status === 204) {
+      return {};
+    }
+    
+    // If there's no content-type or it's not JSON, try to parse but handle errors
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        return {};
+      }
+      try {
+        return JSON.parse(text);
+      } catch {
+        return {};
+      }
     }
 
     return await response.json();

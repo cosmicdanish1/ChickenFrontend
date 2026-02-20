@@ -24,6 +24,8 @@ import {
 import { ChartContainer } from "@/components/ui/chart"
 import { Download, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { format, startOfMonth, eachMonthOfInterval, startOfYear, parseISO, isWithinInterval, subMonths } from "date-fns"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface Sale {
   id: string
@@ -64,6 +66,18 @@ interface PurchaseOrder {
 }
 
 export default function FinancialAnalyticsPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Financial Analytics Coming Soon" 
+          description="Advanced financial analytics and insights will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [mounted, setMounted] = useState(false)
   const [sales, setSales] = useState<Sale[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])

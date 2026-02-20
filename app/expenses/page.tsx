@@ -20,6 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { DateRangeFilter } from "@/components/date-range-filter"
 import { useDateFilter } from "@/contexts/date-filter-context"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface Expense {
   id: string
@@ -34,6 +36,18 @@ interface Expense {
 }
 
 export default function ExpensesPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Expense Management Coming Soon" 
+          description="Complete expense tracking and categorization will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [mounted, setMounted] = useState(false)
   const [showDialog, setShowDialog] = useState(false)

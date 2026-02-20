@@ -15,6 +15,8 @@ import {
 } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import { format, startOfMonth, isWithinInterval, parseISO, eachMonthOfInterval, startOfYear } from "date-fns"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface PurchaseOrder {
   id: string
@@ -302,6 +304,18 @@ export default function DashboardPage() {
   }, [purchases, sales, expenses])
 
   if (!mounted) return null
+
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Dashboard Coming Soon" 
+          description="The complete dashboard with analytics and insights will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>

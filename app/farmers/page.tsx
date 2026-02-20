@@ -19,6 +19,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Search, X, Download, Printer } from "lucide-react"
 import { DateRangeFilter } from "@/components/date-range-filter"
+import { api } from "@/lib/api"
+import { toast } from "sonner"
 
 interface Farmer {
   id: string
@@ -36,6 +38,7 @@ interface Farmer {
 export default function FarmersPage() {
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [showViewDialog, setShowViewDialog] = useState(false)
   const [viewingFarmer, setViewingFarmer] = useState<Farmer | null>(null)
@@ -56,66 +59,73 @@ export default function FarmersPage() {
 
   useEffect(() => {
     setMounted(true)
-    const savedFarmers = localStorage.getItem("farmers")
-    if (savedFarmers) {
-      const parsed = JSON.parse(savedFarmers)
-      // Add status field for backward compatibility
-      const farmersWithStatus = parsed.map((farmer: Farmer) => ({
-        ...farmer,
-        status: farmer.status || "active",
-      }))
-      setFarmers(farmersWithStatus)
-      // Update localStorage with status field
-      localStorage.setItem("farmers", JSON.stringify(farmersWithStatus))
-    } else {
-      setFarmers([])
-    }
+    fetchFarmers()
   }, [])
 
-  const handleSave = () => {
+  const fetchFarmers = async () => {
+    try {
+      setLoading(true)
+      const data = await api.getFarmers()
+      
+      // Map backend data to frontend format
+      const mappedFarmers = data.map((farmer: any) => ({
+        id: farmer.id,
+        name: farmer.name,
+        email: farmer.email || "",
+        phone: farmer.phone || "",
+        address: farmer.address || "",
+        birdCount: 0,
+        joinDate: farmer.createdAt ? new Date(farmer.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        status: farmer.status || "active" as "active" | "inactive",
+        note: farmer.notes || "",
+        farmhouseName: farmer.name,
+      }))
+      setFarmers(mappedFarmers)
+    } catch (error) {
+      console.error('Failed to fetch farmers:', error)
+      toast.error('Failed to load farmers')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
     if (!formData.name || !formData.phone) {
-      alert("Please fill all required fields")
+      toast.error("Please fill all required fields")
       return
     }
 
-    if (editingId) {
-      const updated = farmers.map((farmer) =>
-        farmer.id === editingId
-          ? {
-              ...farmer,
-              name: formData.name,
-              phone: formData.phone,
-              address: formData.address,
-              joinDate: formData.joinDate,
-              status: formData.status,
-              note: formData.note,
-              farmhouseName: formData.farmhouseName,
-            }
-          : farmer,
-      )
-      setFarmers(updated)
-      localStorage.setItem("farmers", JSON.stringify(updated))
-    } else {
-      const newFarmer: Farmer = {
-        id: Date.now().toString(),
-        name: formData.name,
-        email: "", // Keep for backward compatibility
-        phone: formData.phone,
-        address: formData.address,
-        birdCount: 0, // Keep for backward compatibility
-        joinDate: formData.joinDate,
-        status: formData.status,
-        note: formData.note,
-        farmhouseName: formData.farmhouseName,
+    try {
+      setLoading(true)
+      if (editingId) {
+        await api.updateFarmer(editingId, {
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          notes: formData.note,
+          status: formData.status,
+        })
+        toast.success("Farmer updated successfully")
+      } else {
+        await api.createFarmer({
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          notes: formData.note,
+          status: formData.status,
+        })
+        toast.success("Farmer created successfully")
       }
-      const updated = [...farmers, newFarmer]
-      setFarmers(updated)
-      localStorage.setItem("farmers", JSON.stringify(updated))
+      await fetchFarmers()
+      resetForm()
+      setShowDialog(false)
+    } catch (error) {
+      console.error('Failed to save farmer:', error)
+      toast.error(editingId ? 'Failed to update farmer' : 'Failed to create farmer')
+    } finally {
+      setLoading(false)
     }
-
-    resetForm()
-    setShowDialog(false)
-    }
+  }
 
   const resetForm = () => {
     setFormData({
@@ -144,11 +154,19 @@ export default function FarmersPage() {
     setShowDialog(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this farmer?")) {
-      const updated = farmers.filter((farmer) => farmer.id !== id)
-      setFarmers(updated)
-      localStorage.setItem("farmers", JSON.stringify(updated))
+      try {
+        setLoading(true)
+        await api.deleteFarmer(id)
+        toast.success("Farmer deleted successfully")
+        await fetchFarmers()
+      } catch (error) {
+        console.error('Failed to delete farmer:', error)
+        toast.error('Failed to delete farmer')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 

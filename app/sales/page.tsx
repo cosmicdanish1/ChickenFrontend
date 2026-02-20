@@ -20,6 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { DateRangeFilter } from "@/components/date-range-filter"
 import { useDateFilter } from "@/contexts/date-filter-context"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface Retailer {
   id: string
@@ -74,6 +76,18 @@ interface Sale {
 }
 
 export default function SalesPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Sales Management Coming Soon" 
+          description="Full sales tracking with customer management and invoicing will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [sales, setSales] = useState<Sale[]>([])
   const [retailers, setRetailers] = useState<Retailer[]>([])
   const [mounted, setMounted] = useState(false)

@@ -20,6 +20,8 @@ import { Plus, Edit2, Trash2, Eye, Download, Printer, Search, X } from "lucide-r
 import { DateRangeFilter } from "@/components/date-range-filter"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useDateFilter } from "@/contexts/date-filter-context"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface Farmer {
   id: string
@@ -82,6 +84,18 @@ interface PurchaseOrder {
 }
 
 export default function PurchasesPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Purchase Orders Coming Soon" 
+          description="Complete purchase order management with supplier tracking will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [orders, setOrders] = useState<PurchaseOrder[]>([])
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])

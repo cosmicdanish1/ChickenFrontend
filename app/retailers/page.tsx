@@ -19,6 +19,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Search, X, Download, Printer } from "lucide-react"
 import { DateRangeFilter } from "@/components/date-range-filter"
+import { toast } from "sonner"
+import { api } from "@/lib/api"
 
 interface Retailer {
   id: string
@@ -37,6 +39,7 @@ interface Retailer {
 export default function RetailersPage() {
   const [retailers, setRetailers] = useState<Retailer[]>([])
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [showViewDialog, setShowViewDialog] = useState(false)
   const [viewingRetailer, setViewingRetailer] = useState<Retailer | null>(null)
@@ -57,67 +60,74 @@ export default function RetailersPage() {
 
   useEffect(() => {
     setMounted(true)
-    const savedRetailers = localStorage.getItem("retailers")
-    if (savedRetailers) {
-      const parsed = JSON.parse(savedRetailers)
-      // Add status and joinDate fields for backward compatibility
-      const retailersWithStatus = parsed.map((retailer: Retailer) => ({
-        ...retailer,
-        status: retailer.status || "active",
-        joinDate: retailer.joinDate || new Date().toISOString().split("T")[0],
-      }))
-      setRetailers(retailersWithStatus)
-      // Update localStorage with new fields
-      localStorage.setItem("retailers", JSON.stringify(retailersWithStatus))
-    } else {
-      setRetailers([])
-    }
+    fetchRetailers()
   }, [])
 
-  const handleSave = () => {
+  const fetchRetailers = async () => {
+    try {
+      setLoading(true)
+      const data = await api.getRetailers()
+      // Map backend data to frontend format
+      const mappedRetailers = data.map((retailer: any) => ({
+        id: retailer.id,
+        shopName: retailer.name,
+        ownerName: retailer.ownerName || "",
+        email: retailer.email || "",
+        phone: retailer.phone || "",
+        address: retailer.address || "",
+        totalPurchases: 0,
+        lastOrder: retailer.createdAt ? new Date(retailer.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        joinDate: retailer.createdAt ? new Date(retailer.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        status: retailer.status || "active" as "active" | "inactive",
+        note: retailer.notes || "",
+      }))
+      setRetailers(mappedRetailers)
+    } catch (error) {
+      console.error('Failed to fetch retailers:', error)
+      toast.error('Failed to load retailers')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
     if (!formData.shopName || !formData.ownerName || !formData.phone) {
-      alert("Please fill all required fields")
+      toast.error("Please fill all required fields")
       return
     }
 
-    if (editingId) {
-      const updated = retailers.map((retailer) =>
-        retailer.id === editingId
-          ? {
-              ...retailer,
-              shopName: formData.shopName,
-              ownerName: formData.ownerName,
-              phone: formData.phone,
-              address: formData.address,
-              joinDate: formData.joinDate,
-              status: formData.status,
-              note: formData.note,
-            }
-          : retailer,
-      )
-      setRetailers(updated)
-      localStorage.setItem("retailers", JSON.stringify(updated))
-    } else {
-      const newRetailer: Retailer = {
-        id: Date.now().toString(),
-        shopName: formData.shopName,
-        ownerName: formData.ownerName,
-        email: "", // Keep for backward compatibility
-        phone: formData.phone,
-        address: formData.address,
-        totalPurchases: 0,
-        lastOrder: new Date().toISOString().split("T")[0],
-        joinDate: formData.joinDate,
-        status: formData.status,
-        note: formData.note,
+    try {
+      setLoading(true)
+      if (editingId) {
+        await api.updateRetailer(editingId, {
+          name: formData.shopName,
+          ownerName: formData.ownerName,
+          phone: formData.phone,
+          address: formData.address,
+          notes: formData.note,
+          status: formData.status,
+        })
+        toast.success("Retailer updated successfully")
+      } else {
+        await api.createRetailer({
+          name: formData.shopName,
+          ownerName: formData.ownerName,
+          phone: formData.phone,
+          address: formData.address,
+          notes: formData.note,
+          status: formData.status,
+        })
+        toast.success("Retailer created successfully")
       }
-      const updated = [...retailers, newRetailer]
-      setRetailers(updated)
-      localStorage.setItem("retailers", JSON.stringify(updated))
+      await fetchRetailers()
+      resetForm()
+      setShowDialog(false)
+    } catch (error) {
+      console.error('Failed to save retailer:', error)
+      toast.error(editingId ? 'Failed to update retailer' : 'Failed to create retailer')
+    } finally {
+      setLoading(false)
     }
-
-    resetForm()
-    setShowDialog(false)
   }
 
   const resetForm = () => {
@@ -147,11 +157,19 @@ export default function RetailersPage() {
     setShowDialog(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this retailer?")) {
-      const updated = retailers.filter((retailer) => retailer.id !== id)
-      setRetailers(updated)
-      localStorage.setItem("retailers", JSON.stringify(updated))
+      try {
+        setLoading(true)
+        await api.deleteRetailer(id)
+        toast.success("Retailer deleted successfully")
+        await fetchRetailers()
+      } catch (error) {
+        console.error('Failed to delete retailer:', error)
+        toast.error('Failed to delete retailer')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 

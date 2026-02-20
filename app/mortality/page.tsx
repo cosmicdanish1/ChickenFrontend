@@ -17,6 +17,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Edit2, Trash2 } from "lucide-react"
 import { useDateFilter } from "@/contexts/date-filter-context"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface Mortality {
   id: string
@@ -29,6 +31,18 @@ interface Mortality {
 }
 
 export default function MortalityPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Mortality Tracking Coming Soon" 
+          description="Comprehensive mortality tracking and analysis will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [mortalities, setMortalities] = useState<Mortality[]>([])
   const [mounted, setMounted] = useState(false)
   const [showDialog, setShowDialog] = useState(false)

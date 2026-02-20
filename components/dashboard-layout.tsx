@@ -27,6 +27,7 @@ import { DateRangeFilter } from "@/components/date-range-filter"
 import { useDateFilter } from "@/contexts/date-filter-context"
 import { useAuth } from "@/contexts/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
+import { DEMO_MODE, isFeatureAvailable } from "@/lib/demo-config"
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
@@ -61,15 +62,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-            <SidebarLink href="/dashboard" icon={Home} label="Dashboard" open={sidebarOpen} />
-            <SidebarLink href="/inventory" icon={Package} label="Godown" open={sidebarOpen} />
-            <SidebarLink href="/purchases" icon={ShoppingCart} label="Purchases" open={sidebarOpen} />
-            <SidebarLink href="/sales" icon={TrendingUp} label="Sales" open={sidebarOpen} />
-            <SidebarLink href="/mortality" icon={AlertCircle} label="Mortality" open={sidebarOpen} />
-            <SidebarLink href="/expenses" icon={BarChart3} label="Expenses" open={sidebarOpen} />
-            <SidebarLink href="/reports" icon={BarChart3} label="Reports" open={sidebarOpen} />
-            <SidebarLink href="/financial-analytics" icon={Calculator} label="Financial Analytics" open={sidebarOpen} />
+            {/* Show Dashboard only if not in demo mode */}
+            {!DEMO_MODE && <SidebarLink href="/dashboard" icon={Home} label="Dashboard" open={sidebarOpen} />}
+            
+            {/* Hidden features in demo mode */}
+            {!DEMO_MODE && (
+              <>
+                <SidebarLink href="/inventory" icon={Package} label="Godown" open={sidebarOpen} />
+                <SidebarLink href="/purchases" icon={ShoppingCart} label="Purchases" open={sidebarOpen} />
+                <SidebarLink href="/sales" icon={TrendingUp} label="Sales" open={sidebarOpen} />
+                <SidebarLink href="/mortality" icon={AlertCircle} label="Mortality" open={sidebarOpen} />
+                <SidebarLink href="/expenses" icon={BarChart3} label="Expenses" open={sidebarOpen} />
+                <SidebarLink href="/reports" icon={BarChart3} label="Reports" open={sidebarOpen} />
+                <SidebarLink href="/financial-analytics" icon={Calculator} label="Financial Analytics" open={sidebarOpen} />
+              </>
+            )}
 
+            {/* Master Entries - Always visible */}
             <div className="space-y-1">
               <Button
                 variant="ghost"
@@ -79,7 +88,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Users2 size={20} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-2 flex-1 text-left">Master Entries</span>
+                    <span className="ml-2 flex-1 text-left">Masters</span>
                     <ChevronDown size={16} className={`transition-transform ${masterEntriesOpen ? "rotate-180" : ""}`} />
                   </>
                 )}
@@ -94,7 +103,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
+            {/* Users - Always visible */}
             <SidebarLink href="/users" icon={Users} label="Users" open={sidebarOpen} />
+            
+            {/* Settings - Always visible */}
             <SidebarLink href="/settings" icon={Settings} label="Settings" open={sidebarOpen} />
           </nav>
 

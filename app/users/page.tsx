@@ -59,7 +59,10 @@ export default function UsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true)
+      console.log('Loading users...');
       const data = await api.getUsers()
+      console.log('Users loaded:', data.length, 'users');
+      console.log('User statuses:', data.map(u => ({ id: u.id, name: u.name, status: u.status })));
       setUsers(data)
     } catch (error) {
       console.error("Error loading users:", error)
@@ -148,18 +151,25 @@ export default function UsersPage() {
 
   const handleToggleStatus = async (user: User) => {
     try {
+      console.log('Toggling status for user:', user.id, 'Current status:', user.status);
+      
       if (user.status === "active") {
-        await api.deactivateUser(user.id)
+        const result = await api.deactivateUser(user.id)
+        console.log('Deactivate result:', result);
         toast.success("User deactivated successfully")
       } else {
-        await api.activateUser(user.id)
+        const result = await api.activateUser(user.id)
+        console.log('Activate result:', result);
         toast.success("User activated successfully")
       }
+      
+      // Reload data
       await loadUsers()
       await loadStatistics()
-    } catch (error) {
-      console.error("Error toggling user status:", error)
-      toast.error("Failed to update user status")
+    } catch (error: any) {
+      console.error("Error toggling user status:", error);
+      console.error("Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || error.message || "Failed to update user status")
     }
   }
 

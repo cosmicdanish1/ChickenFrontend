@@ -18,6 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Edit2, Trash2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useDateFilter } from "@/contexts/date-filter-context"
+import { DEMO_MODE } from "@/lib/demo-config"
+import { ComingSoon } from "@/components/coming-soon"
 
 interface Farmer {
   id: string
@@ -41,6 +43,18 @@ interface GodownItem {
 }
 
 export default function InventoryPage() {
+  // Show Coming Soon in demo mode
+  if (DEMO_MODE) {
+    return (
+      <DashboardLayout>
+        <ComingSoon 
+          title="Inventory Management Coming Soon" 
+          description="Complete inventory tracking with real-time stock levels and cage management will be available soon!"
+        />
+      </DashboardLayout>
+    )
+  }
+
   const [godownItems, setGodownItems] = useState<GodownItem[]>([])
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [mounted, setMounted] = useState(false)
